@@ -1,4 +1,4 @@
-Feature: Some Samples
+Feature: Sample Order
 
   @Sample
   Scenario: Sample Order sent received

@@ -1,11 +1,13 @@
-package com.samo.fix.autotest.bdd.stepsProcessor;
+package com.samo.fix.autotest.stepsProcessor;
 
-import com.samo.fix.autotest.SessionStatus;
+import com.samo.fix.autotest.data.SessionManager;
 import com.samo.fix.autotest.config.AppCfg;
 import com.samo.fix.autotest.config.CucumberCfg;
 import io.cucumber.datatable.DataTable;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestComponent;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import quickfix.Message;
 import quickfix.Session;
@@ -17,7 +19,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static io.cucumber.spring.CucumberTestContext.SCOPE_CUCUMBER_GLUE;
+
 @Component
+@Scope(SCOPE_CUCUMBER_GLUE)
 @Log4j2
 public class CustomMessageBuilder {
     @Autowired
@@ -25,10 +30,10 @@ public class CustomMessageBuilder {
     @Autowired
     private CucumberCfg cucumberCfg;
 
-    public Message enrichMessageHeaders(String senderCompId, Message message) {
+    public void enrichMessageHeaders(String senderCompId, Message message) {
         log.atDebug().log("");
-        Session session = SessionStatus.SESSION_MAP.get(senderCompId);
-        if(null == session) return null;
+        Session session = SessionManager.SESSION_MAP.get(senderCompId);
+        if(null == session) return;
         SessionID sessionID = session.getSessionID();
         String beginString = sessionID.getBeginString();
         String targetCompId = sessionID.getTargetCompID();
@@ -37,13 +42,12 @@ public class CustomMessageBuilder {
         header.setString(TargetCompID.FIELD, targetCompId);
         header.setString(SenderCompID.FIELD, senderCompId);
         log.info("getDefaultMessage message {}", header);
-        return message;
     }
 
-    public Message enrichClOrdId(Message message) {
+    public void enrichClOrdId(Message message) {
         Optional<String> optionalForSenderCompID = message.getHeader().getOptionalString(SenderCompID.FIELD);
         if(optionalForSenderCompID.isPresent() &&
-                SessionStatus.SESSION_MAP.containsKey(optionalForSenderCompID.get())) {
+                SessionManager.SESSION_MAP.containsKey(optionalForSenderCompID.get())) {
             String clOrdId = cucumberCfg.getClOrdIdPrefix() + System.nanoTime();
             Optional<String> msgTypeOptional = message.getHeader().getOptionalString(MsgType.FIELD);
             String msgType = null;
@@ -57,7 +61,6 @@ public class CustomMessageBuilder {
         } else {
             log.error("There is no session for SenderCompID {} of message {}", optionalForSenderCompID, message);
         }
-        return message;
     }
 
     public Message enrichDefaultFields(Message message) {
@@ -87,7 +90,7 @@ public class CustomMessageBuilder {
                             message.setString(Integer.parseInt(fieldTag), fieldValue);
                         }
                     } catch (Exception e) {
-                        //TODO Log unsupported FieldTag found in Cucumber Data Table
+                        log.atWarn().log("Unsupported FieldTag/Header found in Cucumber Data Table {}", fieldTag);
                     }
                 }
             }

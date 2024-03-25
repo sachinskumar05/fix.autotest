@@ -1,0 +1,28 @@
+spring:
+  main:
+    banner-mode: "off"
+  application:
+    name=fix.autotest
+  config:
+    activate:
+      on-profile: default
+
+app-cfg:
+  default_fix_values:
+    55: ABC #Security
+    48: 100.99 #Price
+    423: 1 #PriceType
+    40: 2 #OrdType
+  timeout_in_millisecond: 1000
+  retry_count: 10
+
+
+quickfix-cfg:
+  initiator-cfg: ${user.dir}/config/initiator/quickfix-default.cfg
+  exchange-sim-cfg: ${user.dir}/config/acceptor/quickfix-exchange-simulator-default.cfg
+
+cucumber-cfg:
+  cl_ord_id_prefix: samo
+  timeout_in_sec: 60
+  retry_count: 10
+

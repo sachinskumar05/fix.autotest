@@ -1,11 +1,13 @@
-package com.samo.fix.autotest.simulators.qfix.exchange;
+package com.samo.fix.autotest.qfix.exchange;
 
-import com.samo.fix.autotest.SessionStatus;
+import com.samo.fix.autotest.data.SessionManager;
 import com.samo.fix.autotest.config.AppCfg;
 import com.samo.fix.autotest.config.QuickfixCfg;
 import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestComponent;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import quickfix.*;
 import quickfix.field.SenderCompID;
@@ -13,8 +15,11 @@ import quickfix.field.SenderCompID;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 
+import static io.cucumber.spring.CucumberTestContext.SCOPE_CUCUMBER_GLUE;
+
 @Log4j2
 @Component
+@Scope(SCOPE_CUCUMBER_GLUE)
 public class QFixExchangeSimulatorApp implements Application {
 
     @Autowired
@@ -60,7 +65,9 @@ public class QFixExchangeSimulatorApp implements Application {
                         .withMessageFactory(new DefaultMessageFactory())
                         .build();
             }
+            this.start();
         } catch (ConfigError e) {
+            log.error("FAILED to Start ", e);
             throw new RuntimeException(e);
         }
     }
@@ -71,8 +78,8 @@ public class QFixExchangeSimulatorApp implements Application {
         for (SessionID sessionID : socketAcceptor.getSessions()) {
             try(Session session = Session.lookupSession(sessionID)) {
                 log.info("READY sessionID {} ", sessionID);
-                SessionStatus.SESSION_STATUS_MAP.computeIfAbsent(sessionID, sid -> SessionStatus.IN_PROGRESS);
-                SessionStatus.SESSION_MAP.computeIfAbsent(sessionID.getSenderCompID(), senderCompId -> session);
+                SessionManager.SESSION_STATUS_MAP.computeIfAbsent(sessionID, sid -> SessionManager.SessionStatus.IN_PROGRESS);
+                SessionManager.SESSION_MAP.computeIfAbsent(sessionID.getSenderCompID(), senderCompId -> session);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -85,8 +92,9 @@ public class QFixExchangeSimulatorApp implements Application {
             try(Session session = Session.lookupSession(sessionID)) {
                 session.logout("Grace logout");
                 log.info("Logout sent on sessionID {} ", sessionID);
-                SessionStatus.SESSION_STATUS_MAP.computeIfPresent(sessionID, (sid, sessionStatus) -> SessionStatus.DOWN);
-                SessionStatus.SESSION_MAP.remove(sessionID.getSenderCompID());
+                SessionManager.SESSION_STATUS_MAP.computeIfPresent(sessionID,
+                        (sid, sessionStatus) -> SessionManager.SessionStatus.DOWN);
+                SessionManager.SESSION_MAP.remove(sessionID.getSenderCompID());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -104,8 +112,8 @@ public class QFixExchangeSimulatorApp implements Application {
             int retryCount = appCfg.getRetryCount();
             String senderCompID = message.getHeader().getString(SenderCompID.FIELD);
             for(int i = 0; i >= retryCount; i++) {
-                SessionID sessionID = SessionStatus.SESSION_MAP.get(senderCompID).getSessionID();
-                if( SessionStatus.SESSION_STATUS_MAP.get(sessionID) == SessionStatus.UP &&
+                SessionID sessionID = SessionManager.SESSION_MAP.get(senderCompID).getSessionID();
+                if( SessionManager.SESSION_STATUS_MAP.get(sessionID) == SessionManager.SessionStatus.UP &&
                     Session.sendToTarget(message, sessionID)) {
                     log.info("message sent to target {}, {} ", sessionID, message);
                     break;

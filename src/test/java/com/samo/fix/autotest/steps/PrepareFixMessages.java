@@ -1,36 +1,43 @@
-package com.samo.fix.autotest.bdd.steps;
+package com.samo.fix.autotest.steps;
 
-import com.samo.fix.autotest.bdd.stepsProcessor.CustomMessageBuilder;
-import com.samo.fix.autotest.core.qfix.QFixInitiatorApp;
+import com.samo.fix.autotest.stepsProcessor.CustomMessageBuilder;
 import com.samo.fix.autotest.data.OrderStore;
-import com.samo.fix.autotest.simulators.qfix.exchange.QFixExchangeSimulatorApp;
+import com.samo.fix.autotest.qfix.exchange.QFixExchangeSimulatorApp;
+import com.samo.fix.autotest.qfix.QFixInitiatorApp;
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.AfterAll;
+import io.cucumber.java.BeforeAll;
 import io.cucumber.java.en.Given;
-import io.cucumber.spring.CucumberContextConfiguration;
 import jakarta.activation.UnsupportedDataTypeException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import quickfix.InvalidMessage;
 import quickfix.Message;
 
 import java.util.List;
 
-@CucumberContextConfiguration
-@SpringBootTest
 @Log4j2
 public class PrepareFixMessages {
     @Autowired
-    private QFixInitiatorApp fixInitiatorApp;
+    private QFixInitiatorApp fixClientApp;
+
     @Autowired
     private QFixExchangeSimulatorApp exchangeSimulatorApp;
 
     @Autowired
-    private OrderStore orderStore;
-    @Autowired
     private CustomMessageBuilder customMessageBuilder;
+    @Autowired
+    private OrderStore orderStore;
+
+    @BeforeAll
+    void beforeAll() {
+    }
+    @AfterAll
+    void afterAll() {}
+
     @Given("{word} Build FIX Messages using below data table")
     public void buildFixMessages(String tag, DataTable dataTable) throws InvalidMessage, UnsupportedDataTypeException {
+        System.out.println(fixClientApp);
         List<Message> messageList = customMessageBuilder.convertDataTables(dataTable);
         orderStore.queueMessages(tag, messageList);
         System.out.println(String.format("tag %s, messageList %s", tag, messageList));
