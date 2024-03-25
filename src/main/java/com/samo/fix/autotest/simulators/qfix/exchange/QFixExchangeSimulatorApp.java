@@ -1,4 +1,4 @@
-package com.samo.fix.autotest.core.qfix;
+package com.samo.fix.autotest.simulators.qfix.exchange;
 
 import com.samo.fix.autotest.SessionStatus;
 import com.samo.fix.autotest.config.AppCfg;
@@ -15,32 +15,32 @@ import java.io.IOException;
 
 @Log4j2
 @Component
-public class QFixInitiatorApp implements Application {
+public class QFixExchangeSimulatorApp implements Application {
 
     @Autowired
     private AppCfg appCfg;
     @Autowired
     private QuickfixCfg quickfixCfg;
 
-    public QFixInitiatorApp(AppCfg appCfg, QuickfixCfg quickfixCfg) {
+    public QFixExchangeSimulatorApp(AppCfg appCfg, QuickfixCfg quickfixCfg) {
         this.appCfg = appCfg;
         this.quickfixCfg = quickfixCfg;
     }
 
-    private SocketInitiator socketInitiator;
+    private SocketAcceptor socketAcceptor;
 
-    private String qfixInitiatorCfg;
+    private String qfixAcceptorCfg;
     private volatile boolean isInitialized;
-    public QFixInitiatorApp(String quickfixDefaultCfg) {
-        this.qfixInitiatorCfg = quickfixDefaultCfg;
+    public QFixExchangeSimulatorApp(String quickfixDefaultCfg) {
+        this.qfixAcceptorCfg = quickfixDefaultCfg;
         if(isInitialized) throw new IllegalCallerException("This is an attempt for duplicate initialization");
         this.isInitialized = true;
     }
-    public QFixInitiatorApp(QuickfixCfg quickfixCfg) {
+    public QFixExchangeSimulatorApp(QuickfixCfg quickfixCfg) {
         this(quickfixCfg.getInitiatorCfg());
     }
 
-    public QFixInitiatorApp() {
+    public QFixExchangeSimulatorApp() {
         if(isInitialized) throw new IllegalCallerException("This is an attempt for duplicate initialization");
         this.isInitialized = true;
     }
@@ -48,11 +48,11 @@ public class QFixInitiatorApp implements Application {
     @PostConstruct
     public void init() {
         log.info("initialized quickfixCfg using active profile name {}", quickfixCfg);
-        this.qfixInitiatorCfg = quickfixCfg.getInitiatorCfg();
+        this.qfixAcceptorCfg = quickfixCfg.getExchangeSimCfg();
         try {
-            SessionSettings sessionSettings = new SessionSettings(this.qfixInitiatorCfg);
-            if(socketInitiator == null) {//ensuring initialization once only
-                socketInitiator  = SocketInitiator.newBuilder()
+            SessionSettings sessionSettings = new SessionSettings(this.qfixAcceptorCfg);
+            if(socketAcceptor == null) {//ensuring initialization once only
+                socketAcceptor  = SocketAcceptor.newBuilder()
                         .withSettings(sessionSettings)
                         .withApplication(this)
                         .withLogFactory(new ScreenLogFactory(sessionSettings))//TODO FileLogFactory
@@ -66,12 +66,11 @@ public class QFixInitiatorApp implements Application {
     }
 
     public void start() throws ConfigError {
-        socketInitiator.start();
+        socketAcceptor.start();
         log.info("Socket initiator started");
-        for (SessionID sessionID : socketInitiator.getSessions()) {
+        for (SessionID sessionID : socketAcceptor.getSessions()) {
             try(Session session = Session.lookupSession(sessionID)) {
-                session.logon();
-                log.info("Logon sent on sessionID {} ", sessionID);
+                log.info("READY sessionID {} ", sessionID);
                 SessionStatus.SESSION_STATUS_MAP.computeIfAbsent(sessionID, sid -> SessionStatus.IN_PROGRESS);
                 SessionStatus.SESSION_MAP.computeIfAbsent(sessionID.getSenderCompID(), senderCompId -> session);
             } catch (IOException e) {
@@ -82,7 +81,7 @@ public class QFixInitiatorApp implements Application {
 
     public void stop() throws ConfigError {
         log.info("Attempt to stop application");
-        for (SessionID sessionID : socketInitiator.getSessions()) {
+        for (SessionID sessionID : socketAcceptor.getSessions()) {
             try(Session session = Session.lookupSession(sessionID)) {
                 session.logout("Grace logout");
                 log.info("Logout sent on sessionID {} ", sessionID);
@@ -97,7 +96,7 @@ public class QFixInitiatorApp implements Application {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        socketInitiator.stop();
+        socketAcceptor.stop();
     }
 
     public void send(Message message) {

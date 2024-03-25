@@ -9,10 +9,10 @@ spring:
 
 app-cfg:
   default_fix_values:
-    security: ABC
-    price: 100.99
-    priceType: 1
-    orderType: 2
+    55: ABC #Security
+    48: 100.99 #Price
+    423: 1 #PriceType
+    40: 2 #OrdType
   timeout_in_millisecond: 1000
   retry_count: 10
 

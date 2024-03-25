@@ -5,6 +5,8 @@ import org.springframework.stereotype.Component;
 import quickfix.Message;
 
 import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -12,11 +14,16 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class OrderStore {
 
-    private final ArrayDeque<Message> orderPool =  new ArrayDeque<>();
-    private final Map<String, Message> messageMap = new ConcurrentHashMap<>();
+    private final Map<String, ArrayDeque<Message>> orderPool =  new ConcurrentHashMap<>();
+    private final Map<String, List<Message>> messageMap = new ConcurrentHashMap<>();
 
-    public void addMessage(Message message) {
+    public void queueMessages(String tag, List<Message> messageList) {
+        orderPool.computeIfAbsent(tag, t->new ArrayDeque<>()).addAll(messageList);
+        log.info("Messages stored for tag {}, msgCount {}", tag, messageList.size());
+    }
 
+    public Deque<Message> poll(String tag) {
+        return orderPool.get(tag);
     }
 
 }

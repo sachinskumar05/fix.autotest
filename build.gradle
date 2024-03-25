@@ -1,5 +1,5 @@
 plugins {
-	id 'java'
+	id 'java-library'
 	id 'org.springframework.boot' version '3.2.4'
 	id 'io.spring.dependency-management' version '1.1.4'
 	id "se.thinkcode.cucumber-runner" version "0.0.11"
@@ -9,7 +9,8 @@ group = 'com.samo'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	sourceCompatibility = '22'
+//	TODO below needed to be on version 22, also change in gradle.properties
+	sourceCompatibility = '21'
 }
 
 configurations {
@@ -28,12 +29,14 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
-	compileOnly 'org.projectlombok:lombok'
+	implementation 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
 	implementation 'org.quickfixj:quickfixj-all:2.1.1'
 
+	testImplementation 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'io.cucumber:cucumber-java:7.16.0'
 	testImplementation 'io.cucumber:cucumber-spring:7.16.0'
 	testImplementation 'io.cucumber:cucumber-junit:7.16.0'
