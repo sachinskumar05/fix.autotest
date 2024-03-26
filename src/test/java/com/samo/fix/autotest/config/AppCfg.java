@@ -1,18 +1,13 @@
 package com.samo.fix.autotest.config;
 
-import io.cucumber.spring.CucumberContextConfiguration;
+import io.cucumber.spring.ScenarioScope;
+import java.util.Map;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
-
-import java.util.Map;
-
-import static io.cucumber.spring.CucumberTestContext.SCOPE_CUCUMBER_GLUE;
 
 @Configuration
-@Scope(SCOPE_CUCUMBER_GLUE)
+@ScenarioScope
 @ConfigurationProperties(prefix = "app-cfg")
 @Data
 public class AppCfg {

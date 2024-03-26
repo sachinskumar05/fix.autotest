@@ -1,12 +1,10 @@
 package com.samo.fix.autotest.steps;
 
-import com.samo.fix.autotest.stepsProcessor.CustomMessageBuilder;
+import com.samo.fix.autotest.steps.processor.CustomMessageBuilder;
 import com.samo.fix.autotest.data.OrderStore;
-import com.samo.fix.autotest.qfix.exchange.QFixExchangeSimulatorApp;
-import com.samo.fix.autotest.qfix.QFixInitiatorApp;
+import com.samo.fix.autotest.qfix.ExchangeApp;
+import com.samo.fix.autotest.qfix.ClientApp;
 import io.cucumber.datatable.DataTable;
-import io.cucumber.java.AfterAll;
-import io.cucumber.java.BeforeAll;
 import io.cucumber.java.en.Given;
 import jakarta.activation.UnsupportedDataTypeException;
 import lombok.extern.log4j.Log4j2;
@@ -19,25 +17,24 @@ import java.util.List;
 @Log4j2
 public class PrepareFixMessages {
     @Autowired
-    private QFixInitiatorApp fixClientApp;
-
+    private ExchangeApp exchangeApp;
     @Autowired
-    private QFixExchangeSimulatorApp exchangeSimulatorApp;
-
+    private ClientApp clientApp;
     @Autowired
     private CustomMessageBuilder customMessageBuilder;
     @Autowired
     private OrderStore orderStore;
+    @Given("{word} Prepare FIX Messages using below data table")
+    public void prepareFixMessages(String tag, DataTable dataTable) throws InvalidMessage, UnsupportedDataTypeException {
+        log.info("exchangeApp {} ", exchangeApp);//This line is initializing exchange first
+        log.info("clientApp {} ", clientApp);// initializing the client after exchange application
 
-    @BeforeAll
-    void beforeAll() {
-    }
-    @AfterAll
-    void afterAll() {}
+        if(null == exchangeApp || null == clientApp)
+            throw new RuntimeException("exchange, client or both are not started");
 
-    @Given("{word} Build FIX Messages using below data table")
-    public void buildFixMessages(String tag, DataTable dataTable) throws InvalidMessage, UnsupportedDataTypeException {
-        System.out.println(fixClientApp);
+        log.info("exchangeApp sessions {}", exchangeApp.printSessions());
+        log.info("clientApp sessions {}", clientApp.printSessions());
+
         List<Message> messageList = customMessageBuilder.convertDataTables(dataTable);
         orderStore.queueMessages(tag, messageList);
         System.out.println(String.format("tag %s, messageList %s", tag, messageList));

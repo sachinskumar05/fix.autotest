@@ -8,5 +8,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class FIXAutoTestApplication {
 	public static void main(String[] args) {
 		log.info("Implementation is pending");
+		throw new UnsupportedOperationException("Not implemented");
 	}
 }

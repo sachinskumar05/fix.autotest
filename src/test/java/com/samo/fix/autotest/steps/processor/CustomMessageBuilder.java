@@ -1,34 +1,33 @@
-package com.samo.fix.autotest.stepsProcessor;
+package com.samo.fix.autotest.steps.processor;
 
-import com.samo.fix.autotest.data.SessionManager;
 import com.samo.fix.autotest.config.AppCfg;
 import com.samo.fix.autotest.config.CucumberCfg;
+import com.samo.fix.autotest.data.SessionManager;
 import io.cucumber.datatable.DataTable;
+import io.cucumber.spring.ScenarioScope;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestComponent;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import quickfix.Message;
 import quickfix.Session;
 import quickfix.SessionID;
 import quickfix.field.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static io.cucumber.spring.CucumberTestContext.SCOPE_CUCUMBER_GLUE;
-
 @Component
-@Scope(SCOPE_CUCUMBER_GLUE)
+@ScenarioScope
 @Log4j2
 public class CustomMessageBuilder {
     @Autowired
     private AppCfg appCfg;
     @Autowired
     private CucumberCfg cucumberCfg;
+
+    @Autowired
+    private SessionManager sessionManager;
 
     public void enrichMessageHeaders(String senderCompId, Message message) {
         log.atDebug().log("");
@@ -47,7 +46,7 @@ public class CustomMessageBuilder {
     public void enrichClOrdId(Message message) {
         Optional<String> optionalForSenderCompID = message.getHeader().getOptionalString(SenderCompID.FIELD);
         if(optionalForSenderCompID.isPresent() &&
-                SessionManager.SESSION_MAP.containsKey(optionalForSenderCompID.get())) {
+                sessionManager.SESSION_ID_MAP.containsKey(optionalForSenderCompID.get())) {
             String clOrdId = cucumberCfg.getClOrdIdPrefix() + System.nanoTime();
             Optional<String> msgTypeOptional = message.getHeader().getOptionalString(MsgType.FIELD);
             String msgType = null;
