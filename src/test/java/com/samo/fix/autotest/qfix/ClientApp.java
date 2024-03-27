@@ -9,11 +9,11 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Logger;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import quickfix.*;
 
 @Log4j2
-@Component
+@Service
 @ScenarioScope
 public class ClientApp extends FIXApplication {
     protected Logger log(){return log;}
@@ -25,17 +25,23 @@ public class ClientApp extends FIXApplication {
         try {
             SessionSettings sessionSettings = new SessionSettings(qfixInitiatorCfg);
             if(socketInitiator == null) {//ensuring initialization once only
+/*
+            socketInitiator = new SocketInitiator(this,
+                new FileStoreFactory(sessionSettings),
+                sessionSettings,
+                new FileLogFactory(sessionSettings),
+                new DefaultMessageFactory());
+*/
                 socketInitiator  = SocketInitiator.newBuilder()
                         .withSettings(sessionSettings)
                         .withApplication(this)
-                        .withLogFactory(new ScreenLogFactory(sessionSettings))//TODO FileLogFactory
+                        .withLogFactory(new FileLogFactory(sessionSettings))//TODO FileLogFactory
                         .withMessageStoreFactory(new FileStoreFactory(sessionSettings))
                         .withMessageFactory(new DefaultMessageFactory())
                         .build();
             }
-            this.keepAlive();
             this.start();
-            TimeUnit.SECONDS.sleep(7);
+            TimeUnit.SECONDS.sleep(10);
             log.info("ClientApp instance {}", this);
             log.info("ClientApp sessions {}", this.printSessions());
         } catch (ConfigError e) {
@@ -46,7 +52,7 @@ public class ClientApp extends FIXApplication {
         }
     }
 
-    public void start() throws ConfigError {
+  public void start() throws ConfigError, InterruptedException {
         socketInitiator.start();
         log.info("Socket Initiator started");
         for (SessionID sessionID : socketInitiator.getSessions()) {
@@ -57,6 +63,7 @@ public class ClientApp extends FIXApplication {
                         sessionID, session.isLogonSent(), session.hashCode());
                 SessionManager.SESSION_ID_MAP.putIfAbsent(sessionID.getSenderCompID(), sessionID);
                 SessionManager.SESSION_MAP.putIfAbsent(sessionID.getSenderCompID(), session);
+                this.keepAlive(session);
             } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }

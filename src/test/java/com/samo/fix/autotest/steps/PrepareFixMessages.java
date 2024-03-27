@@ -18,22 +18,22 @@ import java.util.List;
 public class PrepareFixMessages {
     @Autowired
     private ExchangeApp exchangeApp;
-    @Autowired
-    private ClientApp clientApp;
+//    @Autowired
+//    private ClientApp clientApp;
     @Autowired
     private CustomMessageBuilder customMessageBuilder;
     @Autowired
     private OrderStore orderStore;
     @Given("{word} Prepare FIX Messages using below data table")
     public void prepareFixMessages(String tag, DataTable dataTable) throws InvalidMessage, UnsupportedDataTypeException {
-        log.info("exchangeApp {} ", exchangeApp);//This line is initializing exchange first
-        log.info("clientApp {} ", clientApp);// initializing the client after exchange application
+        log.info("exchangeApp instance {} ", exchangeApp);//This line is initializing exchange first
+//        log.info("clientApp instance {} ", clientApp);// initializing the client after exchange application
 
-        if(null == exchangeApp || null == clientApp)
-            throw new RuntimeException("exchange, client or both are not started");
+//        if(null == exchangeApp || null == clientApp)
+//            throw new RuntimeException("exchange, client or both are not started");
 
         log.info("exchangeApp sessions {}", exchangeApp.printSessions());
-        log.info("clientApp sessions {}", clientApp.printSessions());
+//        log.info("clientApp sessions {}", clientApp.printSessions());
 
         List<Message> messageList = customMessageBuilder.convertDataTables(dataTable);
         orderStore.queueMessages(tag, messageList);

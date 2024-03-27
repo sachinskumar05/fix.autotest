@@ -18,7 +18,7 @@ public class QuickfixCfg {
     private String absCfgFileName = userDir + "/config/initiator/quickfix-";
     private String exchangeSimulator = userDir + "/config/acceptor/quickfix-exchange-simulator-";
     private String fileExt = ".cfg";
-    private String envName = Objects.requireNonNullElse(System.getProperty("profile"), "dafault");
+    private String envName = Objects.requireNonNullElse(System.getProperty("profile"), "default");
 
     @Getter @Setter
     private String initiatorCfg = absCfgFileName + envName + fileExt;

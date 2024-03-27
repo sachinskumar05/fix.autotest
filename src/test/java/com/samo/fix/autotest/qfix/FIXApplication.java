@@ -24,13 +24,13 @@ public abstract class FIXApplication implements Application {
     protected QuickfixCfg quickfixCfg;
 
     protected abstract Logger log();
-    public final Executor executor = Executors.newSingleThreadExecutor();
-    public final AtomicBoolean isAlive = new AtomicBoolean();
-    public void keepAlive() {
+    protected final Executor executor = Executors.newVirtualThreadPerTaskExecutor();
+    protected final AtomicBoolean isAlive = new AtomicBoolean();
+    public void keepAlive(Session session) {
         isAlive.set(true);
         executor.execute(()->{while(isAlive.get()) {
             try {
-                log().info("Keep Alive");
+                log().info("Keep Alive session {}", session);
                 TimeUnit.MILLISECONDS.sleep(1000);
             } catch (InterruptedException e) {
                 isAlive.set(false);
@@ -65,8 +65,10 @@ public abstract class FIXApplication implements Application {
     public String printSessions() {
         StringBuilder sb = new StringBuilder();
         for(SessionID sessionID : SessionManager.SESSION_ID_MAP.values()) {
+            sb.append(sessionID);
+            sb.append("=");
             sb.append(Session.lookupSession(sessionID));
-            sb.append(", ");
+            sb.append("  ");
         }
         return sb.toString();
     }

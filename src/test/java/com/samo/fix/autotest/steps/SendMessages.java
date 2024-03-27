@@ -24,8 +24,8 @@ public class SendMessages {
     @Then("{word} Send Messages")
     public void send(String word) {
         log.info("Starting sending messages for {}", word);
-        log.info("exchangeApp {} ", exchangeApp);
-        log.info("clientApp {} ", clientApp);
+        log.info("exchangeApp instance {} ", exchangeApp);
+        log.info("clientApp instance {} ", clientApp);
 
         if(null == exchangeApp || null == clientApp)
             throw new RuntimeException("exchange, client or both are not initialized");
