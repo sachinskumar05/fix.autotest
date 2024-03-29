@@ -3,8 +3,6 @@ package com.samo.fix.autotest.qfix;
 
 import com.samo.fix.autotest.data.SessionManager;
 import io.cucumber.spring.ScenarioScope;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import lombok.extern.log4j.Log4j2;
@@ -18,16 +16,14 @@ import quickfix.*;
 public class ExchangeApp extends FIXApplication {
     protected Logger log(){return log;}
     private SocketAcceptor socketAcceptor;
-
     @PostConstruct
     public void init() {
-        log.info("initialized quickfixCfg using active profile name {}", quickfixCfg);
-        String qfixAcceptorCfg = quickfixCfg.getExchangeSimCfg();
+        String exchangeSimCfg = quickfixCfg.getExchangeSimCfg();
+        log.info("initializing FIX Exchange with {}", exchangeSimCfg);
         try {
-            SessionSettings sessionSettings = new SessionSettings(qfixAcceptorCfg);
+            SessionSettings sessionSettings = new SessionSettings(exchangeSimCfg);
             if(socketAcceptor == null) {//ensuring initialization once only
                 socketAcceptor  = SocketAcceptor.newBuilder()
-                        .withQueueCapacity(500)
                         .withSettings(sessionSettings)
                         .withApplication(this)
                         .withLogFactory(new FileLogFactory(sessionSettings))//TODO FileLogFactory
@@ -43,22 +39,16 @@ public class ExchangeApp extends FIXApplication {
 
   public void start() throws ConfigError {
         socketAcceptor.start();
-        log.info("Socket Acceptor started");
         for (SessionID sessionID : socketAcceptor.getSessions()) {
             SessionManager.SESSION_ID_MAP.putIfAbsent(sessionID.getSenderCompID(), sessionID);
-            log.info("this.printSessions() = {}" , this.printSessions());
         }
-        log.info("socketAcceptor.getSessions() = {} ", socketAcceptor.getSessions());
-        log.info("this.printSessions() = {}" , this.printSessions());
     }
 
     @PreDestroy
-    public void stop() throws InterruptedException {
-        log.info("Attempt to stop application");
+    public void stop() {
         for (SessionID sessionID : socketAcceptor.getSessions()) {
             SessionManager.SESSION_ID_MAP.remove(sessionID.getSenderCompID());
         }
-            TimeUnit.MILLISECONDS.sleep(1000);
         socketAcceptor.stop();
         isAlive.set(false);
     }

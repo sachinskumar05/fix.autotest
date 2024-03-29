@@ -3,8 +3,6 @@ package com.samo.fix.autotest.qfix;
 
 import com.samo.fix.autotest.data.SessionManager;
 import io.cucumber.spring.ScenarioScope;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import lombok.extern.log4j.Log4j2;
@@ -20,10 +18,10 @@ public class ClientApp extends FIXApplication {
     private SocketInitiator socketInitiator;
     @PostConstruct
     public void init() {
-        log.info("initializing FIX Client with {}", quickfixCfg);
-        String qfixInitiatorCfg = quickfixCfg.getInitiatorCfg();
+        String initiatorCfg = quickfixCfg.getInitiatorCfg();
+        log.info("initializing FIX Client with {}", initiatorCfg);
         try {
-            SessionSettings sessionSettings = new SessionSettings(qfixInitiatorCfg);
+            SessionSettings sessionSettings = new SessionSettings(initiatorCfg);
             if(socketInitiator == null) {//ensuring initialization once only
                 socketInitiator  = SocketInitiator.newBuilder()
                         .withSettings(sessionSettings)
@@ -39,9 +37,8 @@ public class ClientApp extends FIXApplication {
         }
     }
 
-  public void start() throws ConfigError, InterruptedException {
+  public void start() throws ConfigError {
         socketInitiator.start();
-        log.info("Socket Initiator started");
         for (SessionID sessionID : socketInitiator.getSessions()) {
             SessionManager.SESSION_ID_MAP.putIfAbsent(sessionID.getSenderCompID(), sessionID);
         }
@@ -50,6 +47,9 @@ public class ClientApp extends FIXApplication {
     @PreDestroy
     public void stop() {
         log.info("Attempt to stop application");
+        for (SessionID sessionID : socketInitiator.getSessions()) {
+            SessionManager.SESSION_ID_MAP.remove(sessionID.getSenderCompID());
+        }
         socketInitiator.stop();
         isAlive.set(false);
     }

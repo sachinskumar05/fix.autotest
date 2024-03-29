@@ -4,17 +4,15 @@ import com.samo.fix.autotest.config.AppCfg;
 import com.samo.fix.autotest.config.QuickfixCfg;
 import com.samo.fix.autotest.data.SessionManager;
 import io.cucumber.spring.ScenarioScope;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import quickfix.*;
 import quickfix.field.SenderCompID;
-
-import java.io.IOException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @ScenarioScope
 public abstract class FIXApplication implements Application {
@@ -46,8 +44,8 @@ public abstract class FIXApplication implements Application {
             for(int sendingAttemptCount = 0; sendingAttemptCount < retryCount; sendingAttemptCount++) {
                 SessionID sessionID = SessionManager.SESSION_ID_MAP.get(senderCompID);
                 try {
+
                     Session.sendToTarget(message, sessionID);
-                    log().info("message sent to target {}, {} ", sessionID, message);
                     break;
                 } catch (Exception e) {
                     log().info("Session is down/unavailable {}, FAILED to send message {}", sessionID, message);
@@ -60,17 +58,6 @@ public abstract class FIXApplication implements Application {
         } catch (Exception e) {
             log().error("Failed to send from message {} ",  message, e);
         }
-    }
-
-    public String printSessions() {
-        StringBuilder sb = new StringBuilder();
-        for(SessionID sessionID : SessionManager.SESSION_ID_MAP.values()) {
-            sb.append(sessionID);
-            sb.append("=");
-            sb.append(Session.lookupSession(sessionID));
-            sb.append("  ");
-        }
-        return sb.toString();
     }
 
     @Override
