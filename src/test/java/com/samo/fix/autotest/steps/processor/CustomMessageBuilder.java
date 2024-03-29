@@ -31,9 +31,7 @@ public class CustomMessageBuilder {
 
     public void enrichMessageHeaders(String senderCompId, Message message) {
         log.atDebug().log("");
-        Session session = SessionManager.SESSION_MAP.get(senderCompId);
-        if(null == session) return;
-        SessionID sessionID = session.getSessionID();
+        SessionID sessionID = SessionManager.SESSION_ID_MAP.get(senderCompId);
         String beginString = sessionID.getBeginString();
         String targetCompId = sessionID.getTargetCompID();
         Message.Header header = message.getHeader();

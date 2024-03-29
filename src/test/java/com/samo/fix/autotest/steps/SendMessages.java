@@ -12,7 +12,7 @@ import quickfix.Message;
 import java.util.Deque;
 
 @Log4j2
-public class SendMessages {
+public class SendMessages extends SpringIntegrationTest {
     @Autowired
     protected ExchangeApp exchangeApp;
     @Autowired

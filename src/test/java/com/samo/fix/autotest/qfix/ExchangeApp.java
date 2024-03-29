@@ -35,54 +35,30 @@ public class ExchangeApp extends FIXApplication {
                         .withMessageFactory(new DefaultMessageFactory())
                         .build();
             }
-            this.start();
-            TimeUnit.SECONDS.sleep(10);
-            log.info("ExchangeApp instance {}", this);
-            log.info("ExchangeApp sessions {}", this.printSessions());
         } catch (ConfigError e) {
             log.error("FAILED to Start ", e);
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-  public void start() throws ConfigError, InterruptedException {
+  public void start() throws ConfigError {
         socketAcceptor.start();
         log.info("Socket Acceptor started");
         for (SessionID sessionID : socketAcceptor.getSessions()) {
-            try(Session session = Session.lookupSession(sessionID)) {
-                log.info("READY session {}", session);
-                SessionManager.SESSION_ID_MAP.putIfAbsent(sessionID.getSenderCompID(), sessionID);
-                SessionManager.SESSION_MAP.putIfAbsent(sessionID.getSenderCompID(), session);
-                log.info("this.printSessions() = {}" , this.printSessions());
-                this.keepAlive(session);
-            } catch (IOException e) {
-                log.atError().withThrowable(e).log("FAILED to start Exchange Sessions {} ", socketAcceptor);
-                throw new RuntimeException(e);
-            }
+            SessionManager.SESSION_ID_MAP.putIfAbsent(sessionID.getSenderCompID(), sessionID);
+            log.info("this.printSessions() = {}" , this.printSessions());
         }
         log.info("socketAcceptor.getSessions() = {} ", socketAcceptor.getSessions());
         log.info("this.printSessions() = {}" , this.printSessions());
     }
 
     @PreDestroy
-    public void stop() throws ConfigError {
+    public void stop() throws InterruptedException {
         log.info("Attempt to stop application");
         for (SessionID sessionID : socketAcceptor.getSessions()) {
-            try(Session session = Session.lookupSession(sessionID)) {
-                session.logout("Grace logout");
-                log.info("Logout sent on sessionID {} ", sessionID);
-                SessionManager.SESSION_ID_MAP.remove(sessionID.getSenderCompID());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            SessionManager.SESSION_ID_MAP.remove(sessionID.getSenderCompID());
         }
-        try {
             TimeUnit.MILLISECONDS.sleep(1000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         socketAcceptor.stop();
         isAlive.set(false);
     }

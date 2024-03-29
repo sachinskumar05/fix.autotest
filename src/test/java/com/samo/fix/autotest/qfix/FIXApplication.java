@@ -45,11 +45,11 @@ public abstract class FIXApplication implements Application {
             String senderCompID = message.getHeader().getString(SenderCompID.FIELD);
             for(int sendingAttemptCount = 0; sendingAttemptCount < retryCount; sendingAttemptCount++) {
                 SessionID sessionID = SessionManager.SESSION_ID_MAP.get(senderCompID);
-                try(Session session = Session.lookupSession(sessionID)) {
-                    Session.sendToTarget(message, session.getSessionID());
-                    log().info("message sent to target {}, {} ", session.getSessionID(), message);
+                try {
+                    Session.sendToTarget(message, sessionID);
+                    log().info("message sent to target {}, {} ", sessionID, message);
                     break;
-                } catch (IOException e) {
+                } catch (Exception e) {
                     log().info("Session is down/unavailable {}, FAILED to send message {}", sessionID, message);
                     java.util.concurrent.TimeUnit.MILLISECONDS.sleep(appCfg.getTimeoutInMillisecond());
                     if(sendingAttemptCount == retryCount-2) {

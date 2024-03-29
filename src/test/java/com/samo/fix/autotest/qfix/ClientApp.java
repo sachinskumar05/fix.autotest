@@ -25,13 +25,6 @@ public class ClientApp extends FIXApplication {
         try {
             SessionSettings sessionSettings = new SessionSettings(qfixInitiatorCfg);
             if(socketInitiator == null) {//ensuring initialization once only
-/*
-            socketInitiator = new SocketInitiator(this,
-                new FileStoreFactory(sessionSettings),
-                sessionSettings,
-                new FileLogFactory(sessionSettings),
-                new DefaultMessageFactory());
-*/
                 socketInitiator  = SocketInitiator.newBuilder()
                         .withSettings(sessionSettings)
                         .withApplication(this)
@@ -40,14 +33,8 @@ public class ClientApp extends FIXApplication {
                         .withMessageFactory(new DefaultMessageFactory())
                         .build();
             }
-            this.start();
-            TimeUnit.SECONDS.sleep(10);
-            log.info("ClientApp instance {}", this);
-            log.info("ClientApp sessions {}", this.printSessions());
         } catch (ConfigError e) {
             log.error("FAILED to Start ", e);
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
@@ -56,37 +43,13 @@ public class ClientApp extends FIXApplication {
         socketInitiator.start();
         log.info("Socket Initiator started");
         for (SessionID sessionID : socketInitiator.getSessions()) {
-            try(Session session = Session.lookupSession(sessionID)) {
-                session.logon();
-                TimeUnit.SECONDS.sleep(3);
-                log.info("Logon sent on sessionID {} {} sessionHashCode {}",
-                        sessionID, session.isLogonSent(), session.hashCode());
-                SessionManager.SESSION_ID_MAP.putIfAbsent(sessionID.getSenderCompID(), sessionID);
-                SessionManager.SESSION_MAP.putIfAbsent(sessionID.getSenderCompID(), session);
-                this.keepAlive(session);
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            SessionManager.SESSION_ID_MAP.putIfAbsent(sessionID.getSenderCompID(), sessionID);
         }
     }
 
     @PreDestroy
-    public void stop() throws ConfigError {
+    public void stop() {
         log.info("Attempt to stop application");
-        for (SessionID sessionID : socketInitiator.getSessions()) {
-            try(Session session = Session.lookupSession(sessionID)) {
-                session.logout("Grace logout");
-                log.info("Logout sent on sessionID {} ", sessionID);
-                SessionManager.SESSION_ID_MAP.remove(sessionID.getSenderCompID());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        try {
-            TimeUnit.MILLISECONDS.sleep(1000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         socketInitiator.stop();
         isAlive.set(false);
     }

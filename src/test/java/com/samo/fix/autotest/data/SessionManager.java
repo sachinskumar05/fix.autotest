@@ -13,5 +13,4 @@ import quickfix.SessionID;
 public class SessionManager {
     public enum SessionStatus {UP, DOWN, IN_PROGRESS}
     public static final Map<String, SessionID> SESSION_ID_MAP = new ConcurrentHashMap<>();
-    public static final Map<String, Session> SESSION_MAP = new ConcurrentHashMap<>();
 }

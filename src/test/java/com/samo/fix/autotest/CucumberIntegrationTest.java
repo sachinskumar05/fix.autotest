@@ -8,5 +8,5 @@ import org.junit.runner.RunWith;
 		plugin = {"pretty", "html:target/cucumber/sample"},
 		extraGlue = "com.samo.fix.autotest.steps")
 @RunWith(Cucumber.class)
-public class FIXAutoTestApplicationTests {
+public class CucumberIntegrationTest {
 }
