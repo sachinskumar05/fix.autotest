@@ -16,6 +16,40 @@ app-cfg:
   timeout_in_millisecond: 1000
   retry_count: 5
 
+agents-cfg:
+  clientAgent:
+    - class: com.xac.agents.quickfix.QuickfixAgent
+    - FileStorePath: data/messenger/acceptor
+    - FileLogPath: log/acceptor
+    - ConnectionType: acceptor
+    - SocketConnectHost: localhost
+    - StartTime: 00:00:00
+    - EndTime: 00:00:00
+    - HeartBtInt: 30
+    - ReconnectInterval: 5
+    - BeginString: FIXT.1.1
+    - DefaultApplVerID: FIX.5.0SP2
+    - SocketConnectPort: 11001
+    - SenderCompID: <NOT_IN_USE_SENDER>
+    - TargetCompID: <NOT_IN_USE_TARGET>
+  exchangeAgent:
+    - class: com.xac.agents.quickfix.QuickfixAgent
+    - FileStorePath: data/messenger/acceptor
+    - FileLogPath: log/acceptor
+    - ConnectionType: acceptor
+    - SocketConnectHost: localhost
+    - StartTime: 00:00:00
+    - EndTime: 00:00:00
+    - HeartBtInt: 30
+    - ReconnectInterval: 5
+    - BeginString: FIX.4.4
+    - SocketAcceptPort: 19001
+    - SenderCompID: EXCHANGE_SIM
+    - TargetCompID: TEST_BANK_ONE
+    - ResetOnLogon: Y
+    - ResetOnLogout: Y
+    - ResetOnDisconnect: Y
+    - ResetOnError: Y
 
 quickfix-cfg:
   initiator-cfg: ${user.dir}/config/initiator/quickfix-default.cfg
