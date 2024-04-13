@@ -1,5 +1,7 @@
 package com.samo.fix.autotest.steps;
 
+import com.samo.fix.autotest.CustomTestExecutionListener;
+import com.samo.fix.autotest.FIXAutotestAppTest;
 import com.samo.fix.autotest.data.OrderStore;
 import com.samo.fix.autotest.steps.processor.CustomMessageBuilder;
 import io.cucumber.java.en.Then;
@@ -10,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import quickfix.Message;
 
 @Log4j2
-public class SendMessages extends SpringIntegrationTest {
+public class SendMessages extends FIXAutotestAppTest {
     @Autowired
     protected OrderStore orderStore;
     @Autowired
@@ -18,7 +20,9 @@ public class SendMessages extends SpringIntegrationTest {
     @Then("{word} Send Messages")
     public void send(String word) throws InterruptedException {
         log.info("Starting sending messages for {}", word);
-
+        exchangeApp = CustomTestExecutionListener.getExchange();
+        clientApp = CustomTestExecutionListener.getClient();
+        log.info("exchangeApp {}, clientApp {}", exchangeApp, clientApp);
         if(null == exchangeApp || null == clientApp)
             throw new RuntimeException("exchange, client or both are not initialized");
 

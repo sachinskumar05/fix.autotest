@@ -30,7 +30,7 @@ public class CustomMessageBuilder {
     private SessionManager sessionManager;
 
     public void enrichMessageHeaders(String senderCompId, Message message) {
-        log.atDebug().log("");
+        log.atDebug().log("enrichMessageHeaders senderCompId:{}, message:{}", senderCompId, message);
         SessionID sessionID = SessionManager.SESSION_ID_MAP.get(senderCompId);
         String beginString = sessionID.getBeginString();
         String targetCompId = sessionID.getTargetCompID();
@@ -44,7 +44,7 @@ public class CustomMessageBuilder {
     public void enrichClOrdId(Message message) {
         Optional<String> optionalForSenderCompID = message.getHeader().getOptionalString(SenderCompID.FIELD);
         if(optionalForSenderCompID.isPresent() &&
-                sessionManager.SESSION_ID_MAP.containsKey(optionalForSenderCompID.get())) {
+                SessionManager.SESSION_ID_MAP.containsKey(optionalForSenderCompID.get())) {
             String clOrdId = cucumberCfg.getClOrdIdPrefix() + System.nanoTime();
             Optional<String> msgTypeOptional = message.getHeader().getOptionalString(MsgType.FIELD);
             String msgType = null;

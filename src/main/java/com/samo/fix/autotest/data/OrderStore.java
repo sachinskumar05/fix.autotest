@@ -1,6 +1,5 @@
 package com.samo.fix.autotest.data;
 
-import io.cucumber.spring.ScenarioScope;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -12,7 +11,6 @@ import quickfix.Message;
 
 @Log4j2
 @Component
-@ScenarioScope
 public class OrderStore {
 
     private final Map<String, ArrayDeque<Message>> orderPool =  new ConcurrentHashMap<>();

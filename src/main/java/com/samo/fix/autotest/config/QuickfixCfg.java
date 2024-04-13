@@ -1,6 +1,5 @@
 package com.samo.fix.autotest.config;
 
-import io.cucumber.spring.ScenarioScope;
 import java.util.Objects;
 
 import lombok.Data;
@@ -10,7 +9,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ScenarioScope
 @ConfigurationProperties(prefix = "quickfix-cfg")
 @Data
 public class QuickfixCfg {

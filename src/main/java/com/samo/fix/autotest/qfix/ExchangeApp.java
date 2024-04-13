@@ -2,36 +2,39 @@ package com.samo.fix.autotest.qfix;
 
 
 import com.samo.fix.autotest.data.SessionManager;
-import io.cucumber.spring.ScenarioScope;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Logger;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import quickfix.*;
 
+import java.util.concurrent.TimeUnit;
+
 @Log4j2
-@Service
-@ScenarioScope
+@Component
 public class ExchangeApp extends FIXApplication {
     protected Logger log(){return log;}
     private SocketAcceptor socketAcceptor;
+    private String acceptorCfg;
     @PostConstruct
     public void init() {
-        String exchangeSimCfg = quickfixCfg.getExchangeSimCfg();
-        log.info("initializing FIX Exchange with {}", exchangeSimCfg);
+        acceptorCfg = null==acceptorCfg?quickfixCfg.getExchangeSimCfg():acceptorCfg;
+        log.info("initializing FIX Exchange with {}", acceptorCfg);
         try {
-            SessionSettings sessionSettings = new SessionSettings(exchangeSimCfg);
+            SessionSettings sessionSettings = new SessionSettings(acceptorCfg);
             if(socketAcceptor == null) {//ensuring initialization once only
                 socketAcceptor  = SocketAcceptor.newBuilder()
                         .withSettings(sessionSettings)
                         .withApplication(this)
-                        .withLogFactory(new FileLogFactory(sessionSettings))//TODO FileLogFactory
+                        .withLogFactory(new FileLogFactory(sessionSettings))
                         .withMessageStoreFactory(new FileStoreFactory(sessionSettings))
                         .withMessageFactory(new DefaultMessageFactory())
                         .build();
             }
-        } catch (ConfigError e) {
+            this.start();
+            TimeUnit.SECONDS.sleep(0);//Give some time for proper initialization
+        } catch (ConfigError | InterruptedException e) {
             log.error("FAILED to Start ", e);
             throw new RuntimeException(e);
         }

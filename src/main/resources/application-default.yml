@@ -17,6 +17,8 @@ app-cfg:
   retry_count: 5
 
 agents-cfg:
+  default:
+
   clientAgent:
     - class: com.xac.agents.quickfix.QuickfixAgent
     - FileStorePath: data/messenger/acceptor
